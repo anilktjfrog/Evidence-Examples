@@ -1,4 +1,4 @@
-name: simple-evidence-build
+name: rbv2-evidence
 
 on:
   [workflow_dispatch]
@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  docker-build-with-evidence:
-    runs-on: ubuntu-latest
+  docker-build-with-rbv2-evidence:
+    runs-on: self-hosted
     steps:
       - name: Install jfrog cli
         id:   setup-cli
@@ -17,7 +17,8 @@ jobs:
         env:
           JF_URL: https://${{ vars.ARTIFACTORY_URL }}
         with:
-         oidc-provider-name: jfrog-github-oidc
+         oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
+         oidc-audience: ${{ vars.OIDC_PROVIDER }}
 
       - uses: actions/checkout@v4
 
@@ -37,7 +38,7 @@ jobs:
         with:
          push: true
          context: .
-         build-args: REPO_URL=${{ vars.ARTIFACTORY_URL }}/my-docker-remote-or-virtual-repo
+         build-args: REPO_URL=${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}
          platforms: linux/amd64
          tags: ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}
          provenance: false
@@ -45,7 +46,7 @@ jobs:
       - name: add docker package to build
         run: |
            echo "${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}@${{ steps.docker-build.outputs.digest }}" > metadata.json
-           jf rt build-docker-create dev-docker-local --image-file metadata.json --build-name ${{ vars.BUILD_NAME }} --build-number ${{ github.run_number }}
+           jf rt build-docker-create ${{ vars.DEV_DOCKER_REPO_KEY }} --image-file metadata.json --build-name ${{ vars.BUILD_NAME }} --build-number ${{ github.run_number }}
 
       - name: Set Signing Evidence on Docker
         run: |
@@ -73,8 +74,8 @@ jobs:
            
       - name: docker scan
         run: |
-           jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/green-pizza:${{ github.run_number }}
-           jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/green-pizza:${{ github.run_number }} --vuln  --fail=false
+           jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}
+           jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }} --vuln  --fail=false
            
       - name: Publish build info
         if: ${{ true }}
@@ -82,6 +83,7 @@ jobs:
           jf rt build-collect-env
           jf rt build-add-git
           jf rt build-publish
+          
       - name: Sign Build Evidence
         run: |
           # Define actor and date for the signing evidence
@@ -116,32 +118,38 @@ jobs:
             }
           ]
           }" > bundle-spec.json
+          
           # Created in the Signing key section in Artifactory - Admin > Security > Keys Management
           # Create the release bundle
           jf release-bundle-create \
           "${{ vars.BUNDLE_NAME }}" \
           "${{ github.run_number }}" \
-          --signing-key RSA-SIGNING \
+          --signing-key ${{ vars.GPG_KEY }} \
           --spec bundle-spec.json \
           --sync=true
 
           # Generate links to the release bundle
           ARTIFACTORY_UI="${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
-          NAME_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&repositoryKey=release-bundles-v2&activeKanbanTab=promotion"
-          VER_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=release-bundles-v2&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
+          NAME_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeKanbanTab=promotion"
+          VER_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
 
           # Log the creation of the release bundle
           echo "📦 Release bundle [${{ vars.BUNDLE_NAME }}](${NAME_LINK}):[${{ github.run_number }}](${VER_LINK}) created" >> $GITHUB_STEP_SUMMARY
           
       - name: Promote to DEV
         run: |
-          jf release-bundle-promote ${{ vars.BUNDLE_NAME }} ${{ github.run_number }} DEV --signing-key RSA-SIGNING --sync=true
+          jf release-bundle-promote ${{ vars.BUNDLE_NAME }} ${{ github.run_number }} DEV --signing-key ${{ vars.GPG_KEY }} --sync=true
           echo "🚀 Succesfully promote to \`DEV\` environemnt" >> $GITHUB_STEP_SUMMARY
 
       - name: Promote to QA
         run: |
-          jf release-bundle-promote ${{ vars.BUNDLE_NAME }} ${{ github.run_number }} QA --signing-key RSA-SIGNING --sync=true
+          jf release-bundle-promote ${{ vars.BUNDLE_NAME }} ${{ github.run_number }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true
           echo "🚀 Succesfully promote to \`QA\` environemnt" >> $GITHUB_STEP_SUMMARY
+
+      - name: Promote to PROD
+        run: |
+          jf release-bundle-promote ${{ vars.BUNDLE_NAME }} ${{ github.run_number }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true
+          echo "🚀 Succesfully promote to \`PROD\` environemnt" >> $GITHUB_STEP_SUMMARY
 
       - name: Attach Test Evidence to Release Bundle
         run: |
@@ -158,7 +166,7 @@ jobs:
 
             # Generate link to the release bundle
             ARTIFACTORY_UI="${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
-            JF_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=release-bundles-v2&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
+            JF_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
 
             # Log the test result in GitHub summary
             echo "Test on Release Bundle [${{ vars.BUNDLE_NAME }}:${{ github.run_number }}](${JF_LINK}) success" >> $GITHUB_STEP_SUMMARY
