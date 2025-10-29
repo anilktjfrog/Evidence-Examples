@@ -43,10 +43,10 @@ jobs:
          tags: ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}
          provenance: false
 
-      - name: add docker package to build
-        run: |
-           echo "${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}@${{ steps.docker-build.outputs.digest }}" > metadata.json
-           jf rt build-docker-create ${{ vars.DEV_DOCKER_REPO_KEY }} --image-file metadata.json --build-name ${{ vars.BUILD_NAME }} --build-number ${{ github.run_number }} --project bmc-workshop
+     # - name: add docker package to build
+     #   run: |
+     #      echo "${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}@${{ steps.docker-build.outputs.digest }}" > metadata.json
+     #      jf rt build-docker-create ${{ vars.DEV_DOCKER_REPO_KEY }} --image-file metadata.json --build-name ${{ vars.BUILD_NAME }} --build-number ${{ github.run_number }} --project bmc-workshop
 
       - name: Set Signing Evidence on Docker
         run: |
@@ -72,10 +72,10 @@ jobs:
           echo "🔎 Evidence attached: 'signature' 🔏"
 
            
-      - name: docker scan
-        run: |
-           jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}
-           jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }} --vuln  --fail=false
+      #- name: docker scan
+      #  run: |
+      #     jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }}
+      #     jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ github.run_number }} --vuln  --fail=false
            
       - name: Publish build info
         if: ${{ true }}
