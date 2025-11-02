@@ -126,7 +126,8 @@ jobs:
           echo "{
             \"files\": [
             {
-           \"build\": \"${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}\"
+           \"build\": \"${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}\",
+            \"project\": \"${{ vars.JF_PROJECT }}\"
             }
           ]
           }" > bundle-spec.json
