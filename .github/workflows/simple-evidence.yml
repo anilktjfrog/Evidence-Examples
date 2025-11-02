@@ -78,8 +78,7 @@ jobs:
           --predicate ./sign.json \
           --predicate-type https://jfrog.com/evidence/signature/v1 \
           --url https://${{ vars.ARTIFACTORY_URL }} \
-          --access-token ${{ steps.setup-cli.outputs.oidc-token }}
-          --project ${{ vars.JF_PROJECT }}
+          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
           # Log the result
           echo "🔎 Evidence attached: 'signature' 🔏"
 
@@ -117,8 +116,8 @@ jobs:
             --key "${{ secrets.PRIVATE_KEY }}" \
             --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
             --url https://${{ vars.ARTIFACTORY_URL }} \
-            --access-token ${{ steps.setup-cli.outputs.oidc-token }}
-            --project ${{ vars.JF_PROJECT }}
+            --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
+            
           # Add a summary entry to GitHub Actions
           echo "🔎 Evidence attached: 'build-signature' 🔏" >> $GITHUB_STEP_SUMMARY
       - name: Create Release Bundle
@@ -139,8 +138,8 @@ jobs:
           "${{ env.JFROG_CLI_BUILD_NUMBER }}" \
           --signing-key ${{ vars.GPG_KEY }} \
           --spec bundle-spec.json \
-          --sync=true
-          --project ${{ vars.JF_PROJECT }}
+          --sync=true --project ${{ vars.JF_PROJECT }}
+          
           # Generate links to the release bundle
           ARTIFACTORY_UI="https://${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
           NAME_LINK="${ARTIFACTORY_UI}/?bundleName=${{ env.JFROG_CLI_BUILD_NAME }}&bundleToFlash=${{ env.JFROG_CLI_BUILD_NAME }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeKanbanTab=promotion"
@@ -189,7 +188,7 @@ jobs:
           --key "${{ secrets.PRIVATE_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --url https://${{ vars.ARTIFACTORY_URL }} \
-          --access-token ${{ steps.setup-cli.outputs.oidc-token }}
-          --project ${{ vars.JF_PROJECT }}
+          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
+          
           # Log the evidence attachment
           echo "🔎 Evidence attached: integration-test 🧪" >> $GITHUB_STEP_SUMMARY
