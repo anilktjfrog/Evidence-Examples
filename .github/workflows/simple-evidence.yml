@@ -73,7 +73,7 @@ jobs:
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --predicate ./sign.json \
           --predicate-type https://jfrog.com/evidence/signature/v1 \
-          --url ${{ vars.ARTIFACTORY_URL }} \
+          --url https://${{ vars.ARTIFACTORY_URL }} \
           --access-token ${{ steps.setup-cli.outputs.oidc-token }}
           # Log the result
           echo "🔎 Evidence attached: 'signature' 🔏"
@@ -111,7 +111,7 @@ jobs:
             --predicate-type https://jfrog.com/evidence/build-signature/v1 \
             --key "${{ secrets.PRIVATE_KEY }}" \
             --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
-            --url ${{ vars.ARTIFACTORY_URL }} \
+            --url https://${{ vars.ARTIFACTORY_URL }} \
             --access-token ${{ steps.setup-cli.outputs.oidc-token }}
           # Add a summary entry to GitHub Actions
           echo "🔎 Evidence attached: 'build-signature' 🔏" >> $GITHUB_STEP_SUMMARY
@@ -135,7 +135,7 @@ jobs:
           --spec bundle-spec.json \
           --sync=true
           # Generate links to the release bundle
-          ARTIFACTORY_UI="${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
+          ARTIFACTORY_UI="https://${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
           NAME_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeKanbanTab=promotion"
           VER_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
           # Log the creation of the release bundle
@@ -169,7 +169,7 @@ jobs:
             \"result\": \"${TEST_RESULT}\"
           }" > test_evidence.json
           # Generate link to the release bundle
-          ARTIFACTORY_UI="${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
+          ARTIFACTORY_UI="https://${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
           JF_LINK="${ARTIFACTORY_UI}/?bundleName=${{ vars.BUNDLE_NAME }}&bundleToFlash=${{ vars.BUNDLE_NAME }}&releaseBundleVersion=${{ github.run_number }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeVersionTab=Version%20Timeline&activeKanbanTab=promotion"
           # Log the test result in GitHub summary
           echo "Test on Release Bundle [${{ vars.BUNDLE_NAME }}:${{ github.run_number }}](${JF_LINK}) success" >> $GITHUB_STEP_SUMMARY
@@ -181,7 +181,7 @@ jobs:
           --predicate-type https://jfrog.com/evidence/testing-results/v1 \
           --key "${{ secrets.PRIVATE_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
-          --url ${{ vars.ARTIFACTORY_URL }} \
+          --url https://${{ vars.ARTIFACTORY_URL }} \
           --access-token ${{ steps.setup-cli.outputs.oidc-token }}
           # Log the evidence attachment
           echo "🔎 Evidence attached: integration-test 🧪" >> $GITHUB_STEP_SUMMARY
