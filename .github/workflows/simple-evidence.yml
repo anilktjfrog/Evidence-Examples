@@ -85,10 +85,13 @@ jobs:
           # Log the result
           echo "🔎 Evidence attached: 'signature' 🔏"
 
-      #- name: docker scan
-      #  run: |
-      #     jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}
-      #     jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} --vuln  --fail=false
+      - name: docker scan
+        run: |
+           # Configure JFrog CLI for evidence service
+           jf config use default
+           
+           jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}
+           jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} --vuln  --fail=false
 
       - name: Publish build info
         if: ${{ true }}
