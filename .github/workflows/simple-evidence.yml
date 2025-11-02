@@ -45,7 +45,7 @@ jobs:
             .
 
           # Push the Docker image
-          docker push ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}
+          jf docker push ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} 
 
           # Get the image digest for later use
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} | cut -d'@' -f2)
