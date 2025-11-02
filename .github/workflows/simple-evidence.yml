@@ -79,6 +79,7 @@ jobs:
           --predicate-type https://jfrog.com/evidence/signature/v1 \
           --url https://${{ vars.ARTIFACTORY_URL }} \
           --access-token ${{ steps.setup-cli.outputs.oidc-token }}
+          --project ${{ vars.JF_PROJECT }}
           # Log the result
           echo "🔎 Evidence attached: 'signature' 🔏"
 
@@ -117,6 +118,7 @@ jobs:
             --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
             --url https://${{ vars.ARTIFACTORY_URL }} \
             --access-token ${{ steps.setup-cli.outputs.oidc-token }}
+            --project ${{ vars.JF_PROJECT }}
           # Add a summary entry to GitHub Actions
           echo "🔎 Evidence attached: 'build-signature' 🔏" >> $GITHUB_STEP_SUMMARY
       - name: Create Release Bundle
@@ -138,6 +140,7 @@ jobs:
           --signing-key ${{ vars.GPG_KEY }} \
           --spec bundle-spec.json \
           --sync=true
+          --project ${{ vars.JF_PROJECT }}
           # Generate links to the release bundle
           ARTIFACTORY_UI="https://${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
           NAME_LINK="${ARTIFACTORY_UI}/?bundleName=${{ env.JFROG_CLI_BUILD_NAME }}&bundleToFlash=${{ env.JFROG_CLI_BUILD_NAME }}&repositoryKey=${{ vars.RBV2REPOKEY }}&activeKanbanTab=promotion"
@@ -147,15 +150,15 @@ jobs:
 
       - name: Promote to DEV
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} DEV --signing-key ${{ vars.GPG_KEY }} --sync=true
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} DEV --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
           echo "🚀 Succesfully promote to \`DEV\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Promote to QA
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
           echo "🚀 Succesfully promote to \`QA\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Promote to PROD
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
           echo "🚀 Succesfully promote to \`PROD\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Attach Test Evidence to Release Bundle
         run: |
@@ -187,5 +190,6 @@ jobs:
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --url https://${{ vars.ARTIFACTORY_URL }} \
           --access-token ${{ steps.setup-cli.outputs.oidc-token }}
+          --project ${{ vars.JF_PROJECT }}
           # Log the evidence attachment
           echo "🔎 Evidence attached: integration-test 🧪" >> $GITHUB_STEP_SUMMARY
