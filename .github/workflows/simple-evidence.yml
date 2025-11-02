@@ -146,7 +146,7 @@ jobs:
           # Configure JFrog CLI for evidence service
           jf config use ${{ env.CUSTOM_SERVER_ID }}
           
-          jf xr curl "/api/v1/binMgr/builds" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
+          jf xr curl "/api/v1/binMgr/builds" -H 'Content-Type: application/json' -d '{"names": ["${{env.JFROG_CLI_BUILD_NAME}}"] }'
 
       # Set properties to artifacts of build    
       - name: "Optional: Set prop for Artifact"  # These properties were captured Artifacts >> repo path 'spring-petclinic.---.jar' >> Properties
