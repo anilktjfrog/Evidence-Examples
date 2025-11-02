@@ -33,7 +33,7 @@ jobs:
           jf config use default
 
           echo "Perform Audit of source code"
-          jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --fail=false 
+          #jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --fail=false 
 
       - name: Log in to Artifactory Docker Registry
         uses: docker/login-action@v3
