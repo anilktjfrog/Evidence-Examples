@@ -43,7 +43,6 @@ jobs:
           # Build the Docker image
           docker build \
             --build-arg REPO_URL=${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }} \
-            --platform linux/amd64 \
             --tag ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} \
             .
 
