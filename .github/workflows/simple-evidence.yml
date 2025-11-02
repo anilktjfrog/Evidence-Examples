@@ -155,7 +155,7 @@ jobs:
           jf config use ${{ env.CUSTOM_SERVER_ID }}
           
           ts="cmd.$(date '+%Y-%m-%d-%H-%M')" 
-          jf rt sp "job=github-action;env=demo;org=ps;team=arch;pack_cat=webapp;build=maven;product=artifactory;features=package,buildinfo;ts=ts-${{ env.JFROG_CLI_BUILD_NUMBER }}" --build="${{env.JFROG_CLI_BUILD_NMAE}}/${{env.JFROG_CLI_BUILD_NUMBER}}" --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
+          jf rt sp "job=github-action;env=demo;org=ps;team=arch;pack_cat=webapp;build=maven;product=artifactory;features=package,buildinfo;ts=ts-${{ env.JFROG_CLI_BUILD_NUMBER }}" --build="${{env.JFROG_CLI_BUILD_NAME}}/${{env.JFROG_CLI_BUILD_NUMBER}}" --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
 
       - name: "Optional: Query build info"
         env: 
@@ -164,7 +164,7 @@ jobs:
            # Configure JFrog CLI for evidence service
            jf config use ${{ env.CUSTOM_SERVER_ID }}
           
-           jf rt curl "/api/build/${{env.JFROG_CLI_BUILD_NAME}}/${{env.JFROG_CLI_BUILD_NUMBER}}" -o $BUILD_INFO_JSON
+           jf rt curl "/api/build/${{env.JFROG_CLI_BUILD_NAME}}/${{env.JFROG_CLI_BUILD_NUMBER}}?project=${{env.JFROG_CLI_BUILD_PROJECT}}" -o $BUILD_INFO_JSON
            cat $BUILD_INFO_JSON
 
       - name: "Sleep for few seconds"
@@ -180,7 +180,7 @@ jobs:
           # Configure JFrog CLI for evidence service
           jf config use ${{ env.CUSTOM_SERVER_ID }}
           
-          jf xr curl "/api/v1/build/status" -H 'Content-Type: application/json' -d '{"name": "${{env.JFROG_CLI_BUILD_NAME}}", "number": "${{env.JFROG_CLI_BUILD_NUMBER}}" }'
+          jf xr curl "/api/v1/build/status" -H 'Content-Type: application/json' -d '{"name": "${{env.JFROG_CLI_BUILD_NAME}}", "number": "${{env.JFROG_CLI_BUILD_NUMBER}}", "project": "${{env.JFROG_CLI_BUILD_PROJECT}}" }'
 
       
       - name: Run build scan
