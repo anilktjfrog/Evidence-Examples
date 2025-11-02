@@ -37,6 +37,9 @@ jobs:
       - name: Build and Push Docker image
         id: docker-build
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use default
+          
           # Build the Docker image
           docker build \
             --build-arg REPO_URL=${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }} \
