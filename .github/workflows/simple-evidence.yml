@@ -9,6 +9,7 @@ env:
   JFROG_CLI_BUILD_NAME: ${{ vars.BUILD_NAME }}
   JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
   JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
+  CUSTOM_SERVER_ID: "default"
 
 jobs:
   docker-build-with-rbv2-evidence:
@@ -19,18 +20,18 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v4
         env:
           JF_URL: https://${{ vars.ARTIFACTORY_URL }}
-          JF_PROJECT: ${{ vars.JF_PROJECT }}
+          JF_PROJECT: ${{ env.JFROG_CLI_BUILD_PROJECT }}
         with:
           oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
           oidc-audience: ${{ vars.OIDC_PROVIDER }}
-          custom-server-id: default
+          custom-server-id: ${{ env.CUSTOM_SERVER_ID }}
 
       - uses: actions/checkout@v4
 
       - name: Perform JF audit
         run: |
           # Configure JFrog CLI for evidence service
-          jf config use default
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
 
           echo "Perform Audit of source code"
           #jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --fail=false 
@@ -46,7 +47,7 @@ jobs:
         id: docker-build
         run: |
           # Configure JFrog CLI for evidence service
-          jf config use default
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
           
           # Build the Docker image
           docker build \
@@ -63,13 +64,16 @@ jobs:
 
       - name: add docker package to build
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           echo "${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}@${{ steps.docker-build.outputs.digest }}" > metadata.json
           jf rt build-docker-create ${{ vars.DEV_DOCKER_REPO_KEY }} --image-file metadata.json --build-name ${{ env.JFROG_CLI_BUILD_NAME }} --build-number ${{ env.JFROG_CLI_BUILD_NUMBER }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
 
       - name: Set Signing Evidence on Docker
         run: |
           # Configure JFrog CLI for evidence service
-          jf config use default
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
 
           # Create signing evidence JSON file
           SIGNING_ACTOR="${{ github.actor }}"
@@ -88,14 +92,14 @@ jobs:
           --predicate ./sign.json \
           --predicate-type https://jfrog.com/evidence/signature/v1 \
           --url https://${{ vars.ARTIFACTORY_URL }} \
-          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
+          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           # Log the result
           echo "🔎 Evidence attached: 'signature' 🔏"
 
       - name: docker scan
         run: |
            # Configure JFrog CLI for evidence service
-           jf config use default
+           jf config use ${{ env.CUSTOM_SERVER_ID }}
            
            jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}
            jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} --vuln  --fail=false
@@ -103,6 +107,9 @@ jobs:
       - name: Publish build info
         if: ${{ true }}
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           jf rt build-collect-env
           jf rt build-add-git
           jf rt build-publish
@@ -110,7 +117,7 @@ jobs:
       - name: Sign Build Evidence
         run: |
           # Configure JFrog CLI for evidence service
-          jf config use default
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
 
           # Define actor and date for the signing evidence
           ACTOR="${{ github.actor }}"
@@ -129,25 +136,34 @@ jobs:
             --key "${{ secrets.PRIVATE_KEY }}" \
             --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
             --url https://${{ vars.ARTIFACTORY_URL }} \
-            --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
+            --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
             
           # Add a summary entry to GitHub Actions
           echo "🔎 Evidence attached: 'build-signature' 🔏" >> $GITHUB_STEP_SUMMARY
 
       - name: "Optional: Add Builds to Indexing Configuration"
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           jf xr curl "/api/v1/binMgr/builds" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
 
       # Set properties to artifacts of build    
       - name: "Optional: Set prop for Artifact"  # These properties were captured Artifacts >> repo path 'spring-petclinic.---.jar' >> Properties
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           ts="cmd.$(date '+%Y-%m-%d-%H-%M')" 
-          jf rt sp "job=github-action;env=demo;org=ps;team=arch;pack_cat=webapp;build=maven;product=artifactory;features=package,buildinfo;ts=ts-${{ env.JFROG_CLI_BUILD_NUMBER }}" --build="${{env.JFROG_CLI_BUILD_NMAE}}/${{env.JFROG_CLI_BUILD_NUMBER}}"
+          jf rt sp "job=github-action;env=demo;org=ps;team=arch;pack_cat=webapp;build=maven;product=artifactory;features=package,buildinfo;ts=ts-${{ env.JFROG_CLI_BUILD_NUMBER }}" --build="${{env.JFROG_CLI_BUILD_NMAE}}/${{env.JFROG_CLI_BUILD_NUMBER}}" --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
 
       - name: "Optional: Query build info"
         env: 
           BUILD_INFO_JSON: "BuildInfo-${{env.JFROG_CLI_BUILD_NUMBER}}.json"
         run: |
+           # Configure JFrog CLI for evidence service
+           jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
            jf rt curl "/api/build/${{env.JFROG_CLI_BUILD_NAME}}/${{env.JFROG_CLI_BUILD_NUMBER}}" -o $BUILD_INFO_JSON
            cat $BUILD_INFO_JSON
 
@@ -161,20 +177,30 @@ jobs:
 
       - name: "Optional: Query - Build Scan status"
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           jf xr curl "/api/v1/build/status" -H 'Content-Type: application/json' -d '{"name": "${{env.JFROG_CLI_BUILD_NAME}}", "number": "${{env.JFROG_CLI_BUILD_NUMBER}}" }'
 
       
       - name: Run build scan
-        run: jf build-scan ${{ env.JFROG_CLI_BUILD_NAME }}  ${{ env.JFROG_CLI_BUILD_NUMBER }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
+        run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
+          jf build-scan ${{ env.JFROG_CLI_BUILD_NAME }}  ${{ env.JFROG_CLI_BUILD_NUMBER }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
         
       - name: Create Release Bundle
         run: |
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
           # Create the bundle specification JSON
           echo "{
             \"files\": [
             {
            \"build\": \"${{ env.JFROG_CLI_BUILD_NAME }}/${{ env.JFROG_CLI_BUILD_NUMBER }}\",
-            \"project\": \"${{ vars.JF_PROJECT }}\"
+            \"project\": \"${{ env.JFROG_CLI_BUILD_PROJECT }}\"
             }
           ]
           }" > bundle-spec.json
@@ -186,7 +212,7 @@ jobs:
           "${{ env.JFROG_CLI_BUILD_NUMBER }}" \
           --signing-key ${{ vars.GPG_KEY }} \
           --spec bundle-spec.json \
-          --sync=true --project ${{ vars.JF_PROJECT }}
+          --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           
           # Generate links to the release bundle
           ARTIFACTORY_UI="https://${{ vars.ARTIFACTORY_URL }}/ui/artifactory/lifecycle"
@@ -197,20 +223,29 @@ jobs:
 
       - name: Promote to DEV
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} DEV --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }} 
+          
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} DEV --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           echo "🚀 Succesfully promote to \`DEV\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Promote to QA
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           echo "🚀 Succesfully promote to \`QA\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Promote to PROD
         run: |
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ vars.JF_PROJECT }}
+          # Configure JFrog CLI for evidence service
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
+          
+          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           echo "🚀 Succesfully promote to \`PROD\` environemnt" >> $GITHUB_STEP_SUMMARY
       - name: Attach Test Evidence to Release Bundle
         run: |
           # Configure JFrog CLI for evidence service
-          jf config use default
+          jf config use ${{ env.CUSTOM_SERVER_ID }}
 
           ACTOR="${{ github.actor }}"         # Create the test evidence JSON
           DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -236,7 +271,7 @@ jobs:
           --key "${{ secrets.PRIVATE_KEY }}" \
           --key-alias "${{ vars.EVIDENCE_KEY_ALIAS }}" \
           --url https://${{ vars.ARTIFACTORY_URL }} \
-          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ vars.JF_PROJECT }}
+          --access-token ${{ steps.setup-cli.outputs.oidc-token }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           
           # Log the evidence attachment
           echo "🔎 Evidence attached: integration-test 🧪" >> $GITHUB_STEP_SUMMARY
