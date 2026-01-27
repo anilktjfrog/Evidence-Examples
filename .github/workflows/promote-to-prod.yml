@@ -51,7 +51,12 @@ jobs:
         id: run_policy
         run: |
           opa eval --input ./evidence-graph.json --data ./policy/policy.rego "data.policy.output" | jq '.result[0].expressions[0].value'  > policy.json
+          echo "-----------------------------------"
+          cat policy.json
+          echo "-----------------------------------"
           result=$(jq .approved ./policy.json)
+          echo "RESULT=$result"
+          echo "RESULT=$result" >> $GITHUB_STEP_SUMMARY
           echo "RESULT=$result" >> $GITHUB_ENV
       - name: Promote to Production
         run: |
