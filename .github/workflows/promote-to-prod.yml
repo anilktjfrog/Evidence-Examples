@@ -14,6 +14,12 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  JFROG_CLI_BUILD_NAME: ${{ vars.BUILD_NAME }}
+  JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+  JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
+  CUSTOM_SERVER_ID: "default"
+
 jobs:  
   policy-check-and-promote-to-prod:
     runs-on: ubuntu-latest
