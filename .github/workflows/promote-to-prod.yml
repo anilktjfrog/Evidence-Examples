@@ -24,6 +24,7 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v4
         env:
           JF_URL: https://${{ vars.ARTIFACTORY_URL }}
+          JF_PROJECT: ${{ env.JFROG_CLI_BUILD_PROJECT }}
         with:
          oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
          oidc-audience: ${{ vars.OIDC_PROVIDER }}
@@ -38,7 +39,7 @@ jobs:
          
       - name: Call GraphQL
         run: |
-          ./scripts/graphql.sh https://${{ vars.ARTIFACTORY_URL }} ${{ steps.setup-cli.outputs.oidc-token }} release-bundles-v2 ${{ inputs.bundle-name }} ${{ inputs.bundle-version }} ./evidence-graph.json
+          ./scripts/graphql.sh https://${{ vars.ARTIFACTORY_URL }} ${{ steps.setup-cli.outputs.oidc-token }} ${{ env.JFROG_CLI_BUILD_PROJECT }}-release-bundles-v2 ${{ inputs.bundle-name }} ${{ inputs.bundle-version }} ./evidence-graph.json
           cat ./evidence-graph.json
       - name: Run policy
         id: run_policy
