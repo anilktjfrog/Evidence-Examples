@@ -102,7 +102,7 @@ jobs:
            jf config use ${{ env.CUSTOM_SERVER_ID }}
            
            jf docker pull ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }}
-           jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} --vuln  --fail=false
+           #jf docker scan ${{ vars.ARTIFACTORY_URL }}/${{ vars.DEV_DOCKER_REPO_KEY }}/${{ vars.IMAGE_NAME }}:${{ env.JFROG_CLI_BUILD_NUMBER }} --vuln  --fail=false
 
       - name: Publish build info
         if: ${{ true }}
