@@ -59,7 +59,7 @@ jobs:
             jf evd create --key "${{ secrets.PRIVATE_KEY }}" --key-alias SIGNING-KEY \
               --release-bundle ${{ inputs.bundle-name }} --release-bundle-version ${{ inputs.bundle-version }} \
               --predicate ./policy.json --predicate-type https://jfrog.com/evidence/approval/v1
-            jf release-bundle-promote ${{ inputs.bundle-name }} ${{ inputs.bundle-version }} PROD --signing-key RSA-SIGNING  --sync=true
+            jf release-bundle-promote ${{ inputs.bundle-name }} ${{ inputs.bundle-version }} PROD --signing-key RSA-SIGNING  --sync=true --project=${{ env.JFROG_CLI_BUILD_PROJECT }}
             echo "🚀 Succesfully promote to \`PROD\` environemnt" >> $GITHUB_STEP_SUMMARY
           else
             echo "Fail promotion policy check" >> $GITHUB_STEP_SUMMARY
