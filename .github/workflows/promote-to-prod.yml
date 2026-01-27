@@ -16,7 +16,7 @@ permissions:
 
 jobs:  
   policy-check-and-promote-to-prod:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     
       - name: Install jfrog cli
@@ -25,7 +25,7 @@ jobs:
         env:
           JF_URL: https://${{ vars.ARTIFACTORY_URL }}
         with:
-         oidc-provider-name: my-oidc-integration
+         oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
     
       - name: Checkout
         uses: actions/checkout@v4
