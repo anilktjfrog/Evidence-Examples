@@ -183,12 +183,11 @@ jobs:
           jf xr curl "/api/v1/build/status" -H 'Content-Type: application/json' -d '{"name": "${{env.JFROG_CLI_BUILD_NAME}}", "number": "${{env.JFROG_CLI_BUILD_NUMBER}}", "project": "${{env.JFROG_CLI_BUILD_PROJECT}}" }'
 
       
-      #- name: Run build scan
-      #  run: |
-       #   # Configure JFrog CLI for evidence service
-        #  jf config use ${{ env.CUSTOM_SERVER_ID }}
-          
-        #  jf build-scan ${{ env.JFROG_CLI_BUILD_NAME }}  ${{ env.JFROG_CLI_BUILD_NUMBER }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
+       - name: Run build scan
+         run: |
+           # Configure JFrog CLI for evidence service
+           jf config use ${{ env.CUSTOM_SERVER_ID }}
+           jf build-scan ${{ env.JFROG_CLI_BUILD_NAME }}  ${{ env.JFROG_CLI_BUILD_NUMBER }} --project ${{ env.JFROG_CLI_BUILD_PROJECT }} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
         
       - name: Create Release Bundle
         run: |
