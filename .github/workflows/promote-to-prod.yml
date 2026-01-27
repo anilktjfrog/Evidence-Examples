@@ -26,6 +26,7 @@ jobs:
           JF_URL: https://${{ vars.ARTIFACTORY_URL }}
         with:
          oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
+         oidc-audience: ${{ vars.OIDC_PROVIDER }}
     
       - name: Checkout
         uses: actions/checkout@v4
