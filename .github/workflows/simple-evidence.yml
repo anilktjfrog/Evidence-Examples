@@ -234,13 +234,7 @@ jobs:
           
           jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} QA --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
           echo "🚀 Succesfully promote to \`QA\` environemnt" >> $GITHUB_STEP_SUMMARY
-      - name: Promote to PROD
-        run: |
-          # Configure JFrog CLI for evidence service
-          jf config use ${{ env.CUSTOM_SERVER_ID }}
-          
-          jf release-bundle-promote ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }} PROD --signing-key ${{ vars.GPG_KEY }} --sync=true --project ${{ env.JFROG_CLI_BUILD_PROJECT }}
-          echo "🚀 Succesfully promote to \`PROD\` environemnt" >> $GITHUB_STEP_SUMMARY
+
       - name: Attach Test Evidence to Release Bundle
         run: |
           # Configure JFrog CLI for evidence service
